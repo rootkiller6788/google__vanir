@@ -185,6 +185,22 @@ class DetectorCommonFlagsTest(parameterized.TestCase):
     self.assertLen(spl_filter, 1)
     self.assertEqual(spl_filter[0]._target_spl, expected_spl)
 
+  @parameterized.named_parameters(
+      ('december_31', datetime.date(2024, 12, 31), datetime.date(2024, 9, 30)),
+      ('october_31', datetime.date(2024, 10, 31), datetime.date(2024, 9, 30)),
+      ('august_31', datetime.date(2024, 8, 31), datetime.date(2024, 6, 30)),
+      ('july_31', datetime.date(2024, 7, 31), datetime.date(2024, 6, 30)),
+      ('december_30', datetime.date(2024, 12, 30), datetime.date(2024, 9, 30)),
+      ('january_31', datetime.date(2024, 1, 31), datetime.date(2023, 12, 31)),
+      ('may_31', datetime.date(2024, 5, 31), datetime.date(2024, 3, 31)),
+      ('june_30', datetime.date(2024, 6, 30), datetime.date(2024, 6, 30)),
+  )
+  def test_floor_to_quarter_preserve_day(self, date, expected):
+    self.assertEqual(
+        detector_common_flags._floor_to_quarter(date, preserve_day=True),
+        expected,
+    )
+
   @flagsaver.flagsaver
   def test_sign_target_path_filter(self):
     flags.FLAGS['sign_target_path_filter'].parse('foo/bar/.*')

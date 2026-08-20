@@ -12,6 +12,7 @@ scanner implementations, utilities or any other underlying modules should
 neither import this module nor directly use the flag values.
 """
 
+import calendar
 import datetime
 import os
 import re
@@ -234,12 +235,21 @@ def _floor_to_quarter(
   d = date.day if preserve_day else 1
 
   if m >= 9:
-    return datetime.date(y, 9, d)
-  if m >= 6:
-    return datetime.date(y, 6, d)
-  if m >= 3:
-    return datetime.date(y, 3, d)
-  return datetime.date(y - 1, 12, d)
+    target_year, target_month = y, 9
+  elif m >= 6:
+    target_year, target_month = y, 6
+  elif m >= 3:
+    target_year, target_month = y, 3
+  else:
+    target_year, target_month = y - 1, 12
+
+  if preserve_day:
+    # The floored quarter-start month can have fewer days than the original
+    # month (e.g. 2024-12-31 floors to Sep, which has only 30 days). Clamp the
+    # day so dates like the last day of a 31-day month don't crash
+    # datetime.date with a day-out-of-range ValueError.
+    d = min(d, calendar.monthrange(target_year, target_month)[1])
+  return datetime.date(target_year, target_month, d)
 
 
 def generate_vulnerability_filters_from_flags(
